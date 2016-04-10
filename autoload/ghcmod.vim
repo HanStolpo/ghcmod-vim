@@ -246,8 +246,16 @@ endfunction "}}}
 
 function! ghcmod#build_command(args) "{{{
   let l:cmd = ['ghc-mod']
-
-  let l:dist_top  = s:find_basedir() . '/dist'
+  let l:base_dir = s:find_basedir()
+  " if running from a sandbox use cabal exec to execute in sandbox context
+  let l:is_sandbox = filereadable(l:base_dir . '/cabal.sandbox.config')
+  let l:is_stack = isdirectory(l:base_dir . '/.stack-work')
+  if l:is_sandbox
+    let l:cmd = ['cabal', 'exec', 'ghc-mod','--']
+  elseif l:is_stack
+    let l:cmd = ['stack', 'exec', 'ghc-mod','--']
+  endif
+  let l:dist_top  = l:base_dir . '/dist'
   let l:sandboxes = split(glob(l:dist_top . '/dist-*', 1), '\n')
   for l:dist_dir in [l:dist_top] + l:sandboxes
     let l:build_dir = l:dist_dir . '/build'
